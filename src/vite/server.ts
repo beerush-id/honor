@@ -70,7 +70,7 @@ export function restartOnAddUnlink(): Plugin {
   return {
     name: 'restart-on-add-unlink',
     configureServer(server) {
-      server.watcher.add('/app/**');
+      server.watcher.add('/src/**');
       server.watcher.on('add', async () => {
         await server.restart();
       });

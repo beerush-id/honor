@@ -1,6 +1,13 @@
 import type { ZodSchema } from 'zod';
 import { z } from '@hono/zod-openapi';
-import { createContext, type Init, type ReadContext, type RestEnv, type WriteContext } from './context';
+import {
+  createContext,
+  createWriteContext,
+  type Init,
+  type ReadContext,
+  type RestEnv,
+  type WriteContext,
+} from './context';
 import { debugEnd, error, type Json, respond, type RestResponse } from './common.js';
 import { type Context, type TypedResponse } from 'hono';
 import type { RestDriver } from './rest';
@@ -96,35 +103,7 @@ export function load<Ctx extends Init = Init, Rec extends Json = Json, Env exten
 ) {
   const handler = async (c: Context<Env>) => {
     const context = createContext<Ctx, Rec, Env>(c);
-
-    try {
-      const response = await fn(context);
-
-      if (typeof response === 'object') {
-        if (context.select) {
-          if (Array.isArray(response)) {
-            return c.json(selectAll(response as never, context.select as never));
-          } else {
-            return c.json(select(response as never, context.select as never));
-          }
-        }
-
-        debugEnd(c);
-        return c.json(response);
-      }
-
-      debugEnd(c);
-      return c.body(response as never);
-    } catch (err) {
-      debugEnd(c);
-
-      return error(err as Error, [
-        {
-          code: 'internal',
-          message: (err as Error)?.message,
-        },
-      ]);
-    }
+    return await handleReq(c, context as never, fn as never);
   };
 
   Object.assign(handler, { __type: 'handler' });
@@ -139,7 +118,45 @@ export type WriteHandler<Ctx extends Init = Init, Rec extends Json = Json, Env e
 export function write<Ctx extends Init = Init, Rec extends Json = Json, Env extends RestEnv = RestEnv>(
   fn: WriteHandler<Ctx, Rec, Env>
 ) {
-  return load(fn as never);
+  const handler = async (c: Context<Env>) => {
+    const context = await createWriteContext<Ctx, Rec, Env>(c);
+    return await handleReq(c, context as never, fn as never);
+  };
+
+  Object.assign(handler, { __type: 'handler' });
+
+  return handler;
+}
+
+async function handleReq(request: Context, context: ReadContext, handle: ReadHandler) {
+  try {
+    const response = await handle(context);
+
+    if (typeof response === 'object') {
+      if (context.select) {
+        if (Array.isArray(response)) {
+          return request.json(selectAll(response as never, context.select as never));
+        } else {
+          return request.json(select(response as never, context.select as never));
+        }
+      }
+
+      debugEnd(request);
+      return request.json(response);
+    }
+
+    debugEnd(request);
+    return request.body(response as never);
+  } catch (err) {
+    debugEnd(request);
+
+    return error(err as Error, [
+      {
+        code: 'internal',
+        message: (err as Error)?.message,
+      },
+    ]);
+  }
 }
 
 export const beforeReq = async <Ctx extends Init = Init, Rec extends Json = Json, Env extends RestEnv = RestEnv>(

@@ -13,6 +13,7 @@ import {
   load,
   type ServerRoute,
   type Wrapper,
+  write,
 } from './route.js';
 import { debugStart } from './common.js';
 import type { RouterRoute } from 'hono/types';
@@ -89,9 +90,7 @@ function registerApi<E extends RestEnv = RestEnv>(api: Hono<E>, route: ServerRou
   let main = module.default;
 
   if (main && typeof main === 'object' && 'name' in main) {
-    const route = main as never as ServerRoute;
     main = endpoint(main as never).all();
-    console.log(route.schema);
   }
 
   if (typeof main === 'function') {
@@ -106,10 +105,17 @@ function registerApi<E extends RestEnv = RestEnv>(api: Hono<E>, route: ServerRou
 
     for (const method of Object.values(HttpMethod)) {
       if (module[method]) {
-        api.on(method, route.path, module[method] as never);
+        if ([HttpMethod.POST, HttpMethod.PATCH, HttpMethod.PUT].includes(method)) {
+          api.post(route.path, write(module[method] as never));
+        } else {
+          api.on(method, route.path, load(module[method] as never));
+        }
+
         logger.verbose(`Registered ${infoColor('HTTP')}: ${method} ${route.path}`);
       }
     }
+
+    registerDoc<E>(api, route, config);
 
     if (route.children?.length) {
       for (const child of route.children) {
@@ -163,6 +169,23 @@ function registerApi<E extends RestEnv = RestEnv>(api: Hono<E>, route: ServerRou
       if (module[m] && methodMaps[m]) {
         api.on(methodMaps[m], route.path, module[m] as never);
         logger.verbose(`Registered ${debugColor('CRUD')}: ${m} ${route.path}`);
+        // registerDoc<E>(api, route, config);
+      }
+    }
+
+    for (const m of Object.values(HttpMethod)) {
+      if (module[m] && typeof module[m] === 'function') {
+        if (module[m]) {
+          if ([HttpMethod.POST, HttpMethod.PATCH, HttpMethod.PUT].includes(m)) {
+            api.post(route.path, write(module[m] as never));
+          } else {
+            api.on(m, route.path, load(module[m] as never));
+          }
+
+          logger.verbose(`Registered ${infoColor('HTTP')}: ${m} ${route.path}`);
+        }
+
+        logger.verbose(`Registered ${infoColor('HTTP')}: ${m} ${route.path}`);
         // registerDoc<E>(api, route, config);
       }
     }
