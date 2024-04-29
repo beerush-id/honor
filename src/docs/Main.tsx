@@ -6,7 +6,11 @@ const Layout: FC<{ children: Child; title?: string }> = ({ children, title }) =>
     <html className="w-screen h-screen">
       <head>
         <title>{title ?? 'Hono API'}</title>
-        <style></style>
+        {import.meta.env.PROD ? (
+          <link href="/static/app.css" rel="stylesheet" />
+        ) : (
+          <link href="/src/app.css" rel="stylesheet" />
+        )}
       </head>
       <body className="flex flex-col w-screen h-screen">
         <Docs>{children}</Docs>
