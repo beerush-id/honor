@@ -20,7 +20,17 @@ import { endpoint } from './endpoint.js';
 
 export function createApp<E extends RestEnv = RestEnv>(...handlers: Array<MiddlewareHandler | ApiConfig>) {
   const config = handlers.find((h) => typeof h === 'object') as ApiConfig;
-  const middlewares = handlers.filter((h) => typeof h === 'function') as MiddlewareHandler[];
+  const initMiddlewares: MiddlewareHandler[] = [];
+  const postMiddlewares: MiddlewareHandler[] = [];
+
+  let current = initMiddlewares;
+  for (const mid of handlers) {
+    if (typeof mid === 'function') {
+      current.push(mid);
+    } else {
+      current = postMiddlewares;
+    }
+  }
 
   const newConfig: ApiConfig = {
     basePath: config?.basePath,
@@ -54,8 +64,8 @@ export function createApp<E extends RestEnv = RestEnv>(...handlers: Array<Middle
   api.use(jsxRenderer(({ children }) => Main({ children })));
   api.use(debugStart());
 
-  if (middlewares.length) {
-    api.use(...middlewares);
+  if (initMiddlewares.length) {
+    api.use(...initMiddlewares);
   }
 
   for (const route of server) {
@@ -67,6 +77,10 @@ export function createApp<E extends RestEnv = RestEnv>(...handlers: Array<Middle
     api.route(route.path, subApp);
   }
 
+  if (postMiddlewares.length) {
+    api.use(...postMiddlewares);
+  }
+
   return api;
 }
 
@@ -75,7 +89,9 @@ function registerApi<E extends RestEnv = RestEnv>(api: Hono<E>, route: ServerRou
   let main = module.default;
 
   if (main && typeof main === 'object' && 'name' in main) {
+    const route = main as never as ServerRoute;
     main = endpoint(main as never).all();
+    console.log(route.schema);
   }
 
   if (typeof main === 'function') {

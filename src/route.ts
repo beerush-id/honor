@@ -1,4 +1,5 @@
-import { z, ZodSchema } from 'zod';
+import type { ZodSchema } from 'zod';
+import { z } from '@hono/zod-openapi';
 import { createContext, type Init, type ReadContext, type RestEnv, type WriteContext } from './context';
 import { debugEnd, error, type Json, respond, type RestResponse } from './common.js';
 import { type Context, type TypedResponse } from 'hono';

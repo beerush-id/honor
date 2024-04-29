@@ -1,10 +1,10 @@
-import { error, json, jsonList, type RestDriver } from '../rest/index.js';
-import type { Init, ReadContext, RestEnv } from '../context.js';
+import { error, json, jsonList, type RestDriver } from '../../rest/index.js';
+import type { Init, ReadContext, RestEnv } from '../../context.js';
 import type { ZodSchema } from 'zod';
 import type { Context, MiddlewareHandler } from 'hono';
-import { createClient, type SupabaseClient, type SupabaseClientOptions } from '@supabase/supabase-js';
-import { createFactory, type EndpointConfig } from '../endpoint.js';
-import type { Json } from '../common.js';
+import { createClient, type SupabaseClient, type SupabaseClientOptions } from '../../lib/supabase.js';
+import { createFactory, type EndpointConfig } from '../../endpoint.js';
+import type { Json } from '../../common.js';
 
 type Ctx = {
   headers: {
@@ -23,8 +23,8 @@ type Env = RestEnv & {
     remote: Supabase;
   };
   Bindings: {
-    HC_SUPABASE_URL: string;
-    HC_SUPABASE_KEY: string;
+    HS_SUPABASE_URL: string;
+    HS_SUPABASE_KEY: string;
   };
 };
 export type SupabaseEnv = Env;
@@ -44,8 +44,8 @@ export class Supabase implements RestDriver<Ctx, Env, Cfg> {
   public client: SupabaseClient;
 
   constructor(context: Context<Env>, options?: SupabaseClientOptions<Schema>) {
-    const { HC_SUPABASE_URL, HC_SUPABASE_KEY } = context.env;
-    this.client = createClient(HC_SUPABASE_URL, HC_SUPABASE_KEY, options) as never;
+    const { HS_SUPABASE_URL, HS_SUPABASE_KEY } = context.env;
+    this.client = createClient(HS_SUPABASE_URL, HS_SUPABASE_KEY, options) as never;
   }
 
   public async getAll<Body extends Json = Json>(

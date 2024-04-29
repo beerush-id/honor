@@ -1,4 +1,4 @@
-import { type Cookie, createCookie } from './lib';
+import { type Cookie, createCookie } from './helpers';
 import type { Context as RouteContext } from 'hono';
 import { type Fields } from './entity.js';
 import type { NestedPath } from './utils';
