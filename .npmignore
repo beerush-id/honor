@@ -119,6 +119,7 @@ out
 # Project Files
 .idea
 src
+/lib
 tsconfig.json
 docs
 test

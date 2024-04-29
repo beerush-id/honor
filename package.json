@@ -46,7 +46,7 @@
     "dev": "bun clean && tsup && tsc --watch",
     "build": "bun clean && tsup && tsc && publint",
     "clean": "rimraf ./dist && rimraf ./src/lib",
-    "prepublish": "tsc && publint"
+    "prepublish": "bun build"
   },
   "devDependencies": {
     "@supabase/supabase-js": "^2.42.7",
@@ -94,5 +94,8 @@
   "bugs": {
     "url": "https://github.com/beerush-id/honor/issues"
   },
-  "homepage": "https://github.com/beerush-id/honor#readme"
+  "homepage": "https://github.com/beerush-id/honor#readme",
+  "publishConfig": {
+    "access": "public"
+  }
 }
