@@ -61,7 +61,6 @@
     "vite": "^5.2.10",
     "vite-tsconfig-paths": "^4.3.2"
   },
-  "packageManager": "yarn@1.22.19+sha1.4ba7fc5c6e704fce2066ecbfb0b0d8976fe62447",
   "peerDependencies": {
     "@supabase/supabase-js": "^2.42.7",
     "drizzle-zod": "^0.5.1",
@@ -76,5 +75,23 @@
     "hono": "^4.2.7",
     "zod": "^3.23.4",
     "zod-openapi": "^2.17.0"
-  }
+  },
+  "types": "./dist/index.d.ts",
+  "description": "To install dependencies:",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/beerush-id/honor.git"
+  },
+  "keywords": [
+    "hono",
+    "rest",
+    "rest-api",
+    "serverless"
+  ],
+  "author": "Nanang Mahdaen El Agung <mahdaen@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/beerush-id/honor/issues"
+  },
+  "homepage": "https://github.com/beerush-id/honor#readme"
 }
