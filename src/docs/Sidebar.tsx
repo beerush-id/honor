@@ -1,3 +1,3 @@
 export default () => {
-  return <aside>Sidebar</aside>;
+  return <aside></aside>;
 };

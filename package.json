@@ -59,7 +59,8 @@
     "publint": "^0.2.7",
     "rimraf": "^5.0.5",
     "tsup": "^8.0.2",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "@types/bun": "latest"
   },
   "peerDependencies": {
     "vite": "^5.2.10",

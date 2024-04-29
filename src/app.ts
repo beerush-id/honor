@@ -235,7 +235,7 @@ function registerApp(route: ClientRoute, parent?: FC) {
 
 export function registerDoc<E extends RestEnv = RestEnv>(api: Hono<E>, route: ServerRoute, config?: ApiConfig) {
   if (config?.withDocs) {
-    const docPath = route.path.replace(config?.basePath ?? '/api', config?.docsPath ?? '');
+    const docPath = route.path.replace(config?.basePath ?? '/api', config?.docsPath ?? '/docs');
     api.get(docPath, docRoute(route));
     logger.verbose(`Registered ${warnColor('DOCS')}: GET ${docPath || '/'}`);
   }

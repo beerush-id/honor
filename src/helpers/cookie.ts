@@ -54,7 +54,7 @@ export function cookie<T extends Record<string, string>>(init: CookieInit<T>) {
     Object.assign(c.var, {
       cookie: createCookie(c, {
         ...init,
-        secret: init?.secret ?? c.env.API_SECRET,
+        secret: init?.secret ?? c.env.HS_API_SECRET,
       }),
     });
     await next();
