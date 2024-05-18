@@ -37,19 +37,23 @@
     }
   },
   "directories": {
-    "dist": "dist"
+    "dist": "dist",
+    "styles": "styles"
   },
   "files": [
-    "dist"
+    "dist",
+    "styles"
   ],
   "scripts": {
-    "dev": "bun clean && tsup && tsc --watch",
-    "build": "bun clean && tsup && tsc && publint",
+    "dev": "bun dev:init && tsup --watch",
+    "dev:init": "tsup --config tsup.init.config.ts",
+    "build": "bun dev:init && tsup && publint",
     "clean": "rimraf ./dist && rimraf ./src/lib",
-    "prepublish": "bun build"
+    "prepublish": "bun clean && bun build"
   },
   "devDependencies": {
     "@supabase/supabase-js": "^2.42.7",
+    "@types/bun": "latest",
     "@typescript-eslint/eslint-plugin": "^7.7.1",
     "@typescript-eslint/parser": "^7.7.1",
     "eslint": "^8.56.0",
@@ -59,17 +63,18 @@
     "publint": "^0.2.7",
     "rimraf": "^5.0.5",
     "tsup": "^8.0.2",
-    "typescript": "^5.4.5",
-    "@types/bun": "latest"
+    "typescript": "^5.4.5"
   },
-  "peerDependencies": {
+  "optionalDependencies": {
     "vite": "^5.2.10",
     "vite-tsconfig-paths": "^4.3.2"
   },
   "dependencies": {
-    "@hono/zod-openapi": "^0.11.0",
+    "@beerush/logger": "^0.0.6",
+    "@beerush/utilities": "^0.0.2",
     "@hono/vite-cloudflare-pages": "^0.2.5",
     "@hono/vite-dev-server": "^0.12.0",
+    "@hono/zod-openapi": "^0.11.0",
     "@mdx-js/rollup": "^3.0.1",
     "dotenv": "^16.4.5",
     "hono": "^4.2.7",

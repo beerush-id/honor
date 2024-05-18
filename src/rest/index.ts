@@ -5,15 +5,15 @@ import type { RouterConfig } from '../route.js';
 import type { StatusCode } from 'hono/utils/http-status';
 
 export abstract class RestDriver<Ctx extends Init = Init, Env extends RestEnv = RestEnv, Xtr extends Json = Json> {
-  abstract get?(c: ReadContext<Ctx, Json, Env>, o: RouterConfig<Xtr>): Promise<RestResponse>;
+  abstract get?(c: ReadContext<Ctx, Json, Env>, o: RouterConfig<Json, Ctx, Xtr>): Promise<RestResponse>;
 
-  abstract post?(c: WriteContext<Ctx, Json, Env>, o: RouterConfig<Xtr>): Promise<RestResponse>;
+  abstract post?(c: WriteContext<Ctx, Json, Env>, o: RouterConfig<Json, Ctx, Xtr>): Promise<RestResponse>;
 
-  abstract put?(c: WriteContext<Ctx, Json, Env>, o: RouterConfig<Xtr>): Promise<RestResponse>;
+  abstract put?(c: WriteContext<Ctx, Json, Env>, o: RouterConfig<Json, Ctx, Xtr>): Promise<RestResponse>;
 
-  abstract patch?(c: WriteContext<Ctx, Json, Env>, o: RouterConfig<Xtr>): Promise<RestResponse>;
+  abstract patch?(c: WriteContext<Ctx, Json, Env>, o: RouterConfig<Json, Ctx, Xtr>): Promise<RestResponse>;
 
-  abstract delete?(c: ReadContext<Ctx, Json, Env>, o: RouterConfig<Xtr>): Promise<RestResponse>;
+  abstract delete?(c: ReadContext<Ctx, Json, Env>, o: RouterConfig<Json, Ctx, Xtr>): Promise<RestResponse>;
 
   abstract getAll?(c: ReadContext<Ctx, Json, Env>, o: EndpointConfig<Json, Ctx, Xtr>): Promise<RestResponse>;
 

@@ -1,6 +1,6 @@
 import type { Context, MiddlewareHandler } from 'hono';
 import type { RedirectStatusCode, StatusCode } from 'hono/utils/http-status';
-import { logger } from './utils';
+import { logger } from './utils/logger.js';
 
 export type Flat = Record<string, string>;
 export type Json = Record<string, unknown>;
@@ -56,7 +56,7 @@ export function json<T extends Json = Json>(body: T, status: StatusCode = 200) {
 }
 
 export function error(error: Error, messages?: APIError[]) {
-  logger.error(error);
+  logger.error(error.message, error);
 
   return new Response(
     stringify({

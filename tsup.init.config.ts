@@ -1,12 +1,12 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: ['./src'],
-  outDir: './dist',
+  entry: ['./lib'],
+  outDir: './src/lib',
   dts: true,
   splitting: false,
   minify: false,
   format: ['esm'],
-  bundle: false,
+  bundle: true,
   platform: 'browser',
 });

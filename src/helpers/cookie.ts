@@ -1,25 +1,24 @@
+import type { Context } from 'hono';
 import type { CookieOptions as Options } from 'hono/utils/cookie';
 import { deleteCookie, getCookie, getSignedCookie, setCookie, setSignedCookie } from 'hono/cookie';
-import type { Context } from 'hono';
-import { typify } from '../utils/index.js';
+import { isString, typify } from '@beerush/utilities';
 
-export type CookieInit<T extends Record<string, CookieValue>> = {
+export type CookieInit<T extends Record<string, unknown>> = {
   secret: string;
   payload?: T;
 };
 
-export type CookieValue = string;
-
-export type Cookie<T extends Record<string, CookieValue>> = {
+export type Cookie<T extends Record<string, unknown> = Record<string, unknown>> = {
   all: () => T;
   get: (name: keyof T, fallback?: T[keyof T]) => T[keyof T] | void;
   getSigned: (name?: keyof T) => Promise<string | false | void>;
+  has: (name: keyof T) => boolean;
   set: (name: keyof T, value: T[keyof T], options?: Options) => void;
   setSigned: (name: keyof T, value: T[keyof T], options?: Options) => Promise<void>;
   remove: (name: keyof T, options?: Options) => void;
 };
 
-export function createCookie<T extends Record<string, CookieValue>>(c: Context, init: CookieInit<T>): Cookie<T> {
+export function createCookie<T extends Record<string, unknown>>(c: Context, init: CookieInit<T>): Cookie<T> {
   return {
     all: () => {
       return getCookie(c) as T;
@@ -37,11 +36,16 @@ export function createCookie<T extends Record<string, CookieValue>>(c: Context, 
     getSigned: async (name) => {
       return getSignedCookie(c, init.secret, name as never);
     },
+    has: (name) => {
+      return typeof getCookie(c, name as never) !== 'undefined';
+    },
     set: (name, value, options) => {
-      return setCookie(c, name as never, value as never, options);
+      const val = isString(value) ? value : JSON.stringify(value);
+      return setCookie(c, name as never, val, options);
     },
     setSigned: async (name, value, options) => {
-      return setSignedCookie(c, init.secret, name as never, value as never, options);
+      const val = isString(value) ? value : JSON.stringify(value);
+      return setSignedCookie(c, init.secret, name as never, val, options);
     },
     remove: (name, options) => {
       return deleteCookie(c, name as never, options);

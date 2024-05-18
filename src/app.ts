@@ -3,7 +3,8 @@ import { type ApiConfig, importRoutes, join } from './resolver.js';
 import type { FC } from 'hono/jsx';
 import { jsxRenderer } from 'hono/jsx-renderer';
 import Main from './docs/Main.js';
-import { debugColor, infoColor, logger, primaryColor, warnColor } from './utils';
+import { debugColor, infoColor, primaryColor, warnColor } from '@beerush/logger/adapters/console';
+import { logger } from './utils/logger.js';
 import type { RestEnv } from './context.js';
 import {
   type ClientRoute,
@@ -17,7 +18,7 @@ import {
 } from './route.js';
 import { debugStart } from './common.js';
 import type { RouterRoute } from 'hono/types';
-import { endpoint } from './endpoint.js';
+import { endpoint, type EndpointConfig } from './endpoint.js';
 
 export function createApp<E extends RestEnv = RestEnv>(...handlers: Array<MiddlewareHandler | ApiConfig>) {
   const config = handlers.find((h) => typeof h === 'object') as ApiConfig;
@@ -40,12 +41,12 @@ export function createApp<E extends RestEnv = RestEnv>(...handlers: Array<Middle
     routes: {
       client:
         config?.routes?.client ??
-        import.meta.glob(`/src/routes/**/+(page|layout).(tsx|mdx)`, {
+        import.meta.glob(`/src/routes/**/+*(page.ts|page.md|layout.ts)x`, {
           eager: true,
         }),
       server:
         config?.routes?.server ??
-        import.meta.glob(`/src/routes/**/+server.(tsx|mdx)`, {
+        import.meta.glob(`/src/routes/**/!page.(ts|tsx|mdx)`, {
           eager: true,
         }),
     },
@@ -90,7 +91,13 @@ function registerApi<E extends RestEnv = RestEnv>(api: Hono<E>, route: ServerRou
   let main = module.default;
 
   if (main && typeof main === 'object' && 'name' in main) {
-    main = endpoint(main as never).all();
+    const ep = endpoint(main as never);
+
+    if (Array.isArray((main as EndpointConfig).methods)) {
+      main = ep.only((main as EndpointConfig).methods as CrudMethod[]);
+    } else {
+      main = ep.all();
+    }
   }
 
   if (typeof main === 'function') {

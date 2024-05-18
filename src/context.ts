@@ -1,12 +1,14 @@
 import { type Cookie, createCookie } from './helpers';
 import type { Context as RouteContext } from 'hono';
 import { type Fields } from './entity.js';
-import type { NestedPath } from './utils';
+import type { NestedPath } from '@beerush/utilities';
+import type { Logger } from '@beerush/logger';
 import type { RestDriver } from './rest';
 import { parseBody } from 'hono/utils/body';
 import type { ZodSchema } from 'zod';
 import type { FlatRoute } from './route.js';
 import type { Flat, Json } from './common';
+import type { EndpointConfig } from './endpoint.js';
 
 export type Init = {
   headers: Flat;
@@ -25,6 +27,8 @@ export type RestEnv<C extends Init = Init> = {
   Variables: {
     routes: FlatRoute[];
     remote: RestDriver<C>;
+    logger: Logger<unknown>;
+    config?: EndpointConfig;
     startTime: number;
   };
   Bindings: {
@@ -46,6 +50,7 @@ export type ReadContext<ReqInit extends Init = Init, Body extends Json = Json, E
   schema?: ZodSchema;
   set: RouteContext<Env>['set'];
   url: URL;
+  body?: Json;
 };
 
 export function createContext<ReqInit extends Init, Body extends Json = Json, Env extends RestEnv = RestEnv>(

@@ -1,4 +1,4 @@
-import { isArray, isObject } from './utils';
+import { isArray, isObject } from '@beerush/utilities';
 
 export type Entity = Record<string, unknown>;
 

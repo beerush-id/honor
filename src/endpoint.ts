@@ -17,8 +17,10 @@ import {
   beforeReq,
   beforeWrite,
   CrudMethod,
+  HttpMethod,
+  type RouterHooks,
 } from './route.js';
-import { logger } from './utils';
+import { logger } from './utils/logger.js';
 import { jsxRenderer } from 'hono/jsx-renderer';
 import Main from './docs/Main.js';
 import { error as restError, type RestDriver } from './rest';
@@ -30,10 +32,11 @@ export type EndpointConfig<
 > = BaseConfig<Extras> & {
   name: string;
   primaryKey?: string;
+  methods?: CrudMethod[];
   hooks?: EndpointHooks<Body, Context>;
 };
 
-export type EndpointHooks<Res extends Json = Json, Ctx extends Init = Init> = {
+export type EndpointHooks<Res extends Json = Json, Ctx extends Init = Init> = RouterHooks<Res, Ctx> & {
   beforeList?: AfterHook<ReadContext<Ctx, Res>>;
   afterList?: AfterHook<ReadContext<Ctx, Res>, Listing<Res>>;
   beforeGet?: BeforeHook<ReadContext<Ctx, Res>>;
@@ -176,9 +179,21 @@ export function endpoint<
     return app as never;
   };
 
+  const http = <R extends Rec = Rec, C extends Ctx = Ctx, E extends Env = Env, X extends Xtr = Xtr>(
+    methods: HttpMethod[],
+    ...handlers: WriteHook<R, C, E, X>[]
+  ): Hono<E> => {
+    for (const method of methods) {
+      app.on(method.toLowerCase(), '/', handle(...[...handlers, config as never]));
+    }
+
+    return app as never;
+  };
+
   return {
     all,
     only,
+    http,
     create: createOne,
     delete: deleteOne,
     list: getAll,
@@ -194,6 +209,89 @@ export function createFactory<X extends Json = Json, E extends RestEnv = RestEnv
   return <Rec extends Json = Json, Ctx extends C = C, Env extends E = E, Xtr extends X = X>(
     ...handlers: Array<MiddlewareHandler<Env> | EndpointConfig<Rec, Ctx, Xtr>>
   ) => endpoint<Rec, Ctx, Env, Xtr>(...(middleware as never[]), ...(handlers as never[]));
+}
+
+export function handle<
+  Rec extends Json = Json,
+  Ctx extends Init = Init,
+  Env extends RestEnv = RestEnv,
+  Xtr extends Json = Json,
+>(...hooks: WriteHooks<Rec, Ctx, Env, Xtr>) {
+  const config = hooks.find((h) => typeof h !== 'function') as EndpointConfig<Rec, Ctx, Xtr>;
+  const middleware = hooks.filter((h) => typeof h === 'function') as ReadHook<Rec, Ctx, Env>[];
+
+  return async (event: Context<Env>) => {
+    logger.debug(`${event.req.method}: ${event.req.url}`);
+    const method = event.req.method.toLowerCase();
+
+    let before;
+    let after;
+    let contextMaker = createWriteContext;
+
+    switch (method) {
+      case 'get':
+        before = config?.hooks?.beforeGet;
+        after = config?.hooks?.afterGet;
+        contextMaker = createContext as never;
+        break;
+      case 'post':
+        before = config?.hooks?.beforePost;
+        after = config?.hooks?.afterPost;
+        break;
+      case 'patch':
+        before = config?.hooks?.beforePatch;
+        after = config?.hooks?.afterPatch;
+        break;
+      case 'put':
+        before = config?.hooks?.beforePut;
+        after = config?.hooks?.afterPut;
+        break;
+      case 'delete':
+        before = config?.hooks?.beforeDelete;
+        after = config?.hooks?.afterDelete;
+        contextMaker = createContext as never;
+        break;
+      default:
+        break;
+    }
+
+    const context = await contextMaker<Ctx, Rec, Env>(event, config.schema);
+
+    for (const hook of middleware) {
+      const res = await hook(context as never, config);
+      if (res instanceof Response) return res;
+    }
+
+    const { remote } = await beforeReq<Ctx, Rec, Env>(context as never, before as never);
+
+    const rejected = ensureMethod(remote, method as never);
+    if (rejected) {
+      return respond(event, rejected);
+    }
+
+    if (['post', 'put', 'patch'].includes(method)) {
+      const validation = await beforeWrite<Ctx, Rec, Env>(context as never, config);
+      if (!validation.ok) {
+        return respond(event, validation);
+      }
+    }
+
+    try {
+      const response = await (remote as { [key: string]: (...args: unknown[]) => unknown })[method]?.(
+        context as never,
+        config as never
+      );
+      return afterRead(context as never, config, response as never, after as never);
+    } catch (err) {
+      return error(err as Error, [
+        {
+          code: 'internal',
+          field: 'service',
+          message: (err as Error)?.message ?? 'Internal server error',
+        },
+      ]);
+    }
+  };
 }
 
 export function list<
@@ -266,7 +364,7 @@ export function create<
     }
 
     const validation = await beforeWrite<Ctx, Rec, Env>(context, config);
-    if (validation) {
+    if (!validation.ok) {
       return respond(event, validation);
     }
 
@@ -359,7 +457,7 @@ export function update<
     }
 
     const validation = await beforeWrite<Ctx, Rec, Env>(context as never, config);
-    if (validation) {
+    if (!validation.ok) {
       return respond(event, validation);
     }
 
@@ -411,7 +509,7 @@ export function replace<
     }
 
     const validation = await beforeWrite(context as never, config);
-    if (validation) {
+    if (!validation.ok) {
       return respond(event, validation);
     }
 
