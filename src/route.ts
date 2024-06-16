@@ -132,6 +132,11 @@ async function handleReq(request: Context, context: ReadContext, handle: ReadHan
   try {
     const response = await handle(context);
 
+    if (response instanceof Response) {
+      debugEnd(request);
+      return response;
+    }
+
     if (typeof response === 'object') {
       if (context.select) {
         if (Array.isArray(response)) {
