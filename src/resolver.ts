@@ -1,11 +1,18 @@
 import type { FC } from 'hono/jsx';
 import { type ClientRoute, type RouteInit, type ServerRoute } from './route.js';
 
+export enum TrailingSlash {
+  NEVER = 'never',
+  ALWAYS = 'always',
+  BOTH = 'both',
+}
+
 export type ApiConfig = {
   basePath?: string;
   docsPath?: string;
   withDocs?: boolean;
   routes?: RoutePaths;
+  trailingSlash?: TrailingSlash;
 };
 
 export type RoutePaths = {

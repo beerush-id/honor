@@ -1,5 +1,5 @@
 import { type Context, Hono, type MiddlewareHandler } from 'hono';
-import { type ApiConfig, importRoutes, join } from './resolver.js';
+import { type ApiConfig, importRoutes, join, TrailingSlash } from './resolver.js';
 import type { FC } from 'hono/jsx';
 import { jsxRenderer } from 'hono/jsx-renderer';
 import Main from './docs/Main.js';
@@ -19,6 +19,7 @@ import {
 import { debugStart } from './common.js';
 import type { RouterRoute } from 'hono/types';
 import { endpoint, type EndpointConfig } from './endpoint.js';
+import { appendTrailingSlash, trimTrailingSlash } from 'hono/trailing-slash';
 
 export function createApp<E extends RestEnv = RestEnv>(...handlers: Array<MiddlewareHandler | ApiConfig>) {
   const config = handlers.find((h) => typeof h === 'object') as ApiConfig;
@@ -54,6 +55,17 @@ export function createApp<E extends RestEnv = RestEnv>(...handlers: Array<Middle
   const { client = [], server = [] } = importRoutes(newConfig);
 
   const api = new Hono<E>();
+
+  if (config?.trailingSlash) {
+    if (config.trailingSlash === TrailingSlash.ALWAYS) {
+      api.use(appendTrailingSlash());
+    } else {
+      api.use(trimTrailingSlash());
+    }
+  } else {
+    api.use(trimTrailingSlash());
+  }
+
   api.use(async (c, next) => {
     Object.assign(c.env, { ...import.meta.env });
 
