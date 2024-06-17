@@ -125,7 +125,7 @@ function registerApi<E extends RestEnv = RestEnv>(api: Hono<E>, route: ServerRou
     for (const method of Object.values(HttpMethod)) {
       if (module[method]) {
         if ([HttpMethod.POST, HttpMethod.PATCH, HttpMethod.PUT].includes(method)) {
-          api.post(route.path, write(module[method] as never));
+          api.on(method, route.path, write(module[method] as never));
         } else {
           api.on(method, route.path, load(module[method] as never));
         }
@@ -196,7 +196,7 @@ function registerApi<E extends RestEnv = RestEnv>(api: Hono<E>, route: ServerRou
       if (module[m] && typeof module[m] === 'function') {
         if (module[m]) {
           if ([HttpMethod.POST, HttpMethod.PATCH, HttpMethod.PUT].includes(m)) {
-            api.post(route.path, write(module[m] as never));
+            api.on(m, route.path, write(module[m] as never));
           } else {
             api.on(m, route.path, load(module[m] as never));
           }
